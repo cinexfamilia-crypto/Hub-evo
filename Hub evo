@@ -1,0 +1,291 @@
+------------------------------------------------
+-- SERVICES
+------------------------------------------------
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local Run = game:GetService("RunService")
+local Cam = workspace.CurrentCamera
+
+local lp = Players.LocalPlayer
+local char = lp.Character or lp.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+------------------------------------------------
+-- CONFIG
+------------------------------------------------
+local Config = {
+	Speed = {On=false, Value=16},
+	View  = {On=false, Target=""},
+	Aimbot= {On=false},
+	ESP   = {On=false},
+	InfJump = true,
+	Noclip = false,
+	TPTool = false
+}
+
+------------------------------------------------
+-- GUI BASE (HUB EVO v2.00)
+------------------------------------------------
+local gui = Instance.new("ScreenGui", lp.PlayerGui)
+gui.Name = "HubEvoV2"
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.fromScale(0.34,0.7)
+frame.Position = UDim2.fromScale(0.05,0.15)
+frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+frame.BorderSizePixel = 0
+
+local top = Instance.new("Frame", frame)
+top.Size = UDim2.fromScale(1,0.12)
+top.BackgroundColor3 = Color3.fromRGB(0,0,0)
+top.BorderSizePixel = 0
+
+local title = Instance.new("TextLabel", top)
+title.Size = UDim2.fromScale(0.75,1)
+title.Text = "HUB EVO v2.00"
+title.TextScaled = true
+title.TextColor3 = Color3.new(1,1,1)
+title.BackgroundTransparency = 1
+
+local minBtn = Instance.new("TextButton", top)
+minBtn.Size = UDim2.fromScale(0.25,1)
+minBtn.Position = UDim2.fromScale(0.75,0)
+minBtn.Text = "-"
+minBtn.TextScaled = true
+minBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
+minBtn.TextColor3 = Color3.new(1,1,1)
+
+------------------------------------------------
+-- DRAG
+------------------------------------------------
+local drag, dragStart, startPos
+top.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+		drag = true
+		dragStart = i.Position
+		startPos = frame.Position
+	end
+end)
+
+UIS.InputChanged:Connect(function(i)
+	if drag and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+		local d = i.Position - dragStart
+		frame.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + d.X,
+			startPos.Y.Scale, startPos.Y.Offset + d.Y
+		)
+	end
+end)
+UIS.InputEnded:Connect(function() drag = false end)
+
+------------------------------------------------
+-- HELPERS
+------------------------------------------------
+local function button(txt,y)
+	local b = Instance.new("TextButton", frame)
+	b.Size = UDim2.fromScale(0.9,0.07)
+	b.Position = UDim2.fromScale(0.05,y)
+	b.Text = txt
+	b.BackgroundColor3 = Color3.fromRGB(15,15,15)
+	b.TextColor3 = Color3.new(1,1,1)
+	return b
+end
+
+local function subTitle(txt,y)
+	local t = Instance.new("TextLabel", frame)
+	t.Size = UDim2.fromScale(0.9,0.06)
+	t.Position = UDim2.fromScale(0.05,y)
+	t.BackgroundColor3 = Color3.fromRGB(10,10,10)
+	t.TextColor3 = Color3.new(1,1,1)
+	t.TextScaled = true
+	t.Text = txt
+	t.Visible = false
+	return t
+end
+
+------------------------------------------------
+-- BOTÕES
+------------------------------------------------
+local speedBtn = button("WALKSPEED",0.14)
+local viewBtn  = button("VIEW",0.22)
+local aimBtn   = button("AIMBOT: OFF",0.30)
+local espBtn   = button("ESP: OFF",0.38)
+local tpBtn    = button("TP TOOL",0.46)
+local noclipBtn= button("NOCLIP",0.54)
+
+------------------------------------------------
+-- SUB HUBS
+------------------------------------------------
+local speedTitle = subTitle("WalkSpeed v3",0.60)
+local speedBox = Instance.new("TextBox", frame)
+speedBox.Size = UDim2.fromScale(0.9,0.07)
+speedBox.Position = UDim2.fromScale(0.05,0.66)
+speedBox.PlaceholderText = "Velocidade desejada"
+speedBox.Visible = false
+speedBox.BackgroundColor3 = Color3.fromRGB(10,10,10)
+speedBox.TextColor3 = Color3.new(1,1,1)
+
+local viewTitle = subTitle("View v10 Plus+",0.74)
+local viewBox = Instance.new("TextBox", frame)
+viewBox.Size = UDim2.fromScale(0.9,0.07)
+viewBox.Position = UDim2.fromScale(0.05,0.80)
+viewBox.PlaceholderText = "Nome (2 letras)"
+viewBox.Visible = false
+viewBox.BackgroundColor3 = Color3.fromRGB(10,10,10)
+viewBox.TextColor3 = Color3.new(1,1,1)
+
+------------------------------------------------
+-- BOTÕES AÇÃO
+------------------------------------------------
+speedBtn.MouseButton1Click:Connect(function()
+	speedBox.Visible = not speedBox.Visible
+	speedTitle.Visible = speedBox.Visible
+end)
+
+viewBtn.MouseButton1Click:Connect(function()
+	viewBox.Visible = not viewBox.Visible
+	viewTitle.Visible = viewBox.Visible
+	Config.View.On = viewBox.Visible
+end)
+
+aimBtn.MouseButton1Click:Connect(function()
+	Config.Aimbot = not Config.Aimbot
+	aimBtn.Text = Config.Aimbot and "AIMBOT: ON" or "AIMBOT: OFF"
+end)
+
+espBtn.MouseButton1Click:Connect(function()
+	Config.ESP = not Config.ESP
+	espBtn.Text = Config.ESP and "ESP: ON" or "ESP: OFF"
+end)
+
+tpBtn.MouseButton1Click:Connect(function()
+	Config.TPTool = not Config.TPTool
+end)
+
+noclipBtn.MouseButton1Click:Connect(function()
+	Config.Noclip = not Config.Noclip
+end)
+
+------------------------------------------------
+-- MINIMIZAR (ESCONDE TUDO)
+------------------------------------------------
+local mini = false
+minBtn.MouseButton1Click:Connect(function()
+	mini = not mini
+	for _,v in pairs(frame:GetChildren()) do
+		if v ~= top then v.Visible = not mini end
+	end
+	minBtn.Text = mini and "+" or "-"
+end)
+
+------------------------------------------------
+-- INFINITE JUMP
+------------------------------------------------
+UIS.JumpRequest:Connect(function()
+	if Config.InfJump then
+		hum:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+------------------------------------------------
+-- AIMBOT
+------------------------------------------------
+local function getClosestTarget()
+	local best, dist = nil, math.huge
+	for _,p in pairs(Players:GetPlayers()) do
+		if p ~= lp and p.Character and p.Character:FindFirstChild("Head") then
+			local pos,vis = Cam:WorldToViewportPoint(p.Character.Head.Position)
+			if vis then
+				local d = (Vector2.new(pos.X,pos.Y) - UIS:GetMouseLocation()).Magnitude
+				if d < dist then
+					dist = d
+					best = p.Character.Head
+				end
+			end
+		end
+	end
+	return best
+end
+
+------------------------------------------------
+-- ESP (BRILHO + LINHA)
+------------------------------------------------
+local espCache = {}
+local function clearESP()
+	for _,v in pairs(espCache) do v:Destroy() end
+	espCache = {}
+end
+
+------------------------------------------------
+-- LOOP PRINCIPAL
+------------------------------------------------
+Run.RenderStepped:Connect(function()
+	-- WALKSPEED
+	if speedBox.Visible then
+		Config.Speed.Value = math.clamp(tonumber(speedBox.Text) or 16,16,150)
+		Config.Speed.On = true
+	end
+	hum.WalkSpeed = Config.Speed.On and Config.Speed.Value or 16
+
+	-- VIEW
+	if Config.View.On and #viewBox.Text >= 2 then
+		for _,p in pairs(Players:GetPlayers()) do
+			if p ~= lp and p.Name:lower():sub(1,#viewBox.Text) == viewBox.Text:lower() then
+				if p.Character and p.Character:FindFirstChild("Humanoid") then
+					Cam.CameraSubject = p.Character.Humanoid
+				end
+			end
+		end
+	else
+		Cam.CameraSubject = hum
+	end
+
+	-- AIMBOT
+	if Config.Aimbot then
+		if UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+			local t = getClosestTarget()
+			if t then
+				Cam.CFrame = Cam.CFrame:Lerp(CFrame.new(Cam.CFrame.Position,t.Position),0.2)
+			end
+		end
+	end
+
+	-- ESP
+	if Config.ESP then
+		for _,p in pairs(Players:GetPlayers()) do
+			if p ~= lp and p.Character and not espCache[p] then
+				local h = Instance.new("Highlight", p.Character)
+				h.FillColor = Color3.fromRGB(255,255,0)
+				h.FillTransparency = 0.2
+				h.OutlineTransparency = 0
+				local a = Instance.new("Attachment", hrp)
+				local b = Instance.new("Attachment", p.Character:WaitForChild("HumanoidRootPart"))
+				local beam = Instance.new("Beam", a)
+				beam.Attachment0 = a
+				beam.Attachment1 = b
+				beam.Color = ColorSequence.new(Color3.new(1,1,0))
+				beam.Width0, beam.Width1 = 0.1,0.1
+				espCache[p] = h
+			end
+		end
+	else
+		clearESP()
+	end
+
+	-- NOCLIP
+	hum:ChangeState(Config.Noclip and Enum.HumanoidStateType.Physics or Enum.HumanoidStateType.GettingUp)
+
+end)
+
+------------------------------------------------
+-- TP TOOL
+------------------------------------------------
+UIS.InputBegan:Connect(function(i)
+	if not Config.TPTool then return end
+	if i.UserInputType == Enum.UserInputType.MouseButton1 then
+		local ray = Cam:ScreenPointToRay(i.Position.X,i.Position.Y)
+		local hit = workspace:Raycast(ray.Origin,ray.Direction*500)
+		if hit then hrp.CFrame = CFrame.new(hit.Position + Vector3.new(0,3,0)) end
+	end
+end)
